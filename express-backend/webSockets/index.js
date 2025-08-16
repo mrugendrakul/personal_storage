@@ -1,6 +1,7 @@
 const liveStatsWss = require('./liveStats')
 const liveFileSystem = require('./liveFileSystem')
 const url = require('url')
+const {wss :liveUpload} = require('./liveUpload')
 
 function initializeWebSocket(server) {
     server.on('upgrade', (request, socket, head) => {
@@ -17,6 +18,11 @@ function initializeWebSocket(server) {
                 liveFileSystem.handleUpgrade(request,socket,head,(ws)=>{
                     liveFileSystem.emit('connection',ws,request)
                 });
+                break;
+            case '/upload-progress':
+                liveUpload.handleUpgrade(request,socket,head,(ws)=>{
+                    liveUpload.emit('connection',ws,request)
+                })
                 break;
             default:
                 console.error("No web socket for path", pathname)

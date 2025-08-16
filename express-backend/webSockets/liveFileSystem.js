@@ -37,7 +37,7 @@ wss.on('connection', (ws, request) => {
                     const contents = getDirectoryContents(dirPath,userPath);
                     broadcast(
                         dirPath, 
-                        JSON.stringify({ type: 'update', path: userPath, contents })
+                        JSON.stringify({ type: eventType, path: userPath, contents })
                     );
                 }
             })
