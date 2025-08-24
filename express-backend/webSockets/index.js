@@ -20,8 +20,8 @@ function initializeWebSocket(server) {
                 });
                 break;
             case '/upload-progress':
-                liveUpload.handleUpgrade(request, socket, head, (ws) => {
-                    liveUpload.emit('connection', ws, request)
+                liveUpload.handleUpgrade(request,socket,head,(ws)=>{
+                    liveUpload.emit('connection',ws,request)
                 })
                 break;
             default:

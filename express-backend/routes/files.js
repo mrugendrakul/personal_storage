@@ -10,41 +10,27 @@ const { randomUUID } = require('crypto');
 const busboy = require('busboy');
 const { sendProgress } = require('../webSockets/liveUpload');
 
-const bytesToGB =(bytes)=>parseFloat( (bytes/(1024*1024*1024)).toFixed(2))
-const bytesToMB =(bytes)=>parseFloat( (bytes/(1024*1024)).toFixed(2))
+const bytesToGB = (bytes) => parseFloat((bytes / (1024 * 1024 * 1024)).toFixed(2))
+const bytesToMB = (bytes) => parseFloat((bytes / (1024 * 1024)).toFixed(2))
 
-const storage = multer.diskStorage({
-    destination:function(req,file,cb){
-        const userPath = req.query.path || '/'
-        const dirPath = path.join(safeDirectory,userPath)
-        cb(null,dirPath)
-    },
-    filename:function(req,file,cb){
-        cb(null,file.originalname)
-    }
-})
-
-const upload = multer({
-    storage:storage
-})
 /* GET users listing. */
-router.get('/disks', async (req, res, next) =>{
-    try{
+router.get('/disks', async (req, res, next) => {
+    try {
         const disks = await si.fsSize()
-        const mountPoints = disks.map(disk =>({
-            name:disk.fs,
-            mount:disk.mount,
-            size:bytesToGB(disk.size),
-            usedParcent:disk.use
+        const mountPoints = disks.map(disk => ({
+            name: disk.fs,
+            mount: disk.mount,
+            size: bytesToGB(disk.size),
+            usedParcent: disk.use
         }))
         res.json(mountPoints)
-    }catch(err){
-        console.error("Error getting disks",err)
-        res.status(500).json({error:"Error fetching disks"})
+    } catch (err) {
+        console.error("Error getting disks", err)
+        res.status(500).json({ error: "Error fetching disks" })
     }
 });
 
-router.post('/browse',async(req,res)=>{
+router.post('/browse', async (req, res) => {
     // const userPath = req.body.path || '/'
     // const requestedPath = path.resolve(ROOT_DIRECTORY,userPath)
 
@@ -53,52 +39,52 @@ router.post('/browse',async(req,res)=>{
     // }
 
     const userPath = req.body.path || '/'
-    const dirPath = path.join(safeDirectory,userPath)
+    const dirPath = path.join(safeDirectory, userPath)
 
-    try{
-        const items = await fs.readdir(dirPath,{withFileTypes:true})
+    try {
+        const items = await fs.readdir(dirPath, { withFileTypes: true })
         const contents = await Promise.all(
-            items.map(async (item)=>{
-                const showPath = path.join(userPath,item.name)
-                const itemPath = path.join(dirPath,item.name)
-                try{
+            items.map(async (item) => {
+                const showPath = path.join(userPath, item.name)
+                const itemPath = path.join(dirPath, item.name)
+                try {
                     const stats = await fs.stat(itemPath)
-                    return{
-                        name:item.name,
-                        path:showPath,
-                        isDirectory:item.isDirectory(),
-                        size:stats.size,
-                        modified:stats.mtime
-                    }
-                }catch(e){
                     return {
-                        name:item.name,
-                        path:showPath,
-                        isDirectory:item.isDirectory(),
-                        size:'N/A',
-                        modified:'N/A'
+                        name: item.name,
+                        path: showPath,
+                        isDirectory: item.isDirectory(),
+                        size: stats.size,
+                        modified: stats.mtime
+                    }
+                } catch (e) {
+                    return {
+                        name: item.name,
+                        path: showPath,
+                        isDirectory: item.isDirectory(),
+                        size: 'N/A',
+                        modified: 'N/A'
                     }
                 }
             })
         )
         res.json(contents)
-    }catch(err){
-        console.error("Error getting files",err)
-        res.status(500).json({error:"Error getting files"})
+    } catch (err) {
+        console.error("Error getting files", err)
+        res.status(500).json({ error: "Error getting files" })
     }
 })
 
 
-router.get('/download',(req,res)=>{
+router.get('/download', (req, res) => {
     const userPath = req.query.path;
 
-    if(!userPath){
-        return res.status(400).json({error:'file path is required'})
+    if (!userPath) {
+        return res.status(400).json({ error: 'file path is required' })
     }
 
-    const dirPath = path.join(safeDirectory,userPath)
-    res.download(dirPath,(err)=>{
-        if(err){
+    const dirPath = path.join(safeDirectory, userPath)
+    res.download(dirPath, (err) => {
+        if (err) {
             console.error(`Error downloading file ${dirPath}:`, err);
             if (!res.headersSent) {
                 res.status(404).json({ error: 'File not found or permission denied.' });
@@ -190,8 +176,8 @@ router.post('/delete-folder', async (req, res) => {
             await fs.rm(dirPath,{recursive:true,force:true})
             res.status(201).json({message:'folder created successfully'})
         }else{
-            await fs.unlink(itemPath);
-            console.log(`File deleted: ${itemPath}`);
+            await fs.unlink(dirPath);
+            console.log(`File deleted: ${dirPath}`);
             res.status(200).json({ message: 'File deleted successfully.' });
         }
     }catch(err){
@@ -199,6 +185,5 @@ router.post('/delete-folder', async (req, res) => {
         res.status(500).json({error:"Error deleting folder"})
     }
 })
-
 
 module.exports = router;
