@@ -175,8 +175,8 @@ router.post('/delete-folder', async (req, res) => {
             await fs.rm(dirPath,{recursive:true,force:true})
             res.status(201).json({message:'folder created successfully'})
         }else{
-            await fs.unlink(itemPath);
-            console.log(`File deleted: ${itemPath}`);
+            await fs.unlink(dirPath);
+            console.log(`File deleted: ${dirPath}`);
             res.status(200).json({ message: 'File deleted successfully.' });
         }
     }catch(err){
