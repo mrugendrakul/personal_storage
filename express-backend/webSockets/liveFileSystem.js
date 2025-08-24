@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const safeDirectory = '/home/Mrugendra/safeDirectory'
+const safeDirectory = '/run/media/Mrugendra/Extra Storage/safeStorage/'
 const wss = new WebSocket.Server({ noServer: true })
 
 /**
@@ -45,7 +45,7 @@ wss.on('connection', (ws, request) => {
             console.log('started new watcher',dirPath)
 
         } catch (error) {
-            console.error(`Failed to watch directory ${requestedPath}:`, error);
+            console.error(`Failed to watch directory ${dirPath}:`, error);
             ws.close(1011, 'Failed to watch directory');
             return;
         }

@@ -1,10 +1,14 @@
 var express = require('express');
 var router = express.Router();
+const fsnp = require('fs')
 const fs = require('fs').promises;
 const path = require('path')
 const si = require('systeminformation')
-const safeDirectory = '/home/Mrugendra/safeDirectory'
+const safeDirectory = '/run/media/Mrugendra/Extra Storage/safeStorage/'
 const multer = require('multer')
+const { randomUUID } = require('crypto');
+const busboy = require('busboy');
+const { sendProgress } = require('../webSockets/liveUpload');
 
 const bytesToGB =(bytes)=>parseFloat( (bytes/(1024*1024*1024)).toFixed(2))
 const bytesToMB =(bytes)=>parseFloat( (bytes/(1024*1024)).toFixed(2))
@@ -103,31 +107,98 @@ router.get('/download',(req,res)=>{
     })
 })
 
-router.post('/upload',(req,res)=>{
-    const uploader = upload.single('file')
-    console.log("upload data req", req.query.path)
-    uploader(req,res,function(err){
-        if(err instanceof multer.MulterError){
-            return res.status(500).json({error:"multer error"+err.message})
-        }
-        else if (err) {
-            // An unknown error occurred (like our custom path validation error)
-            return res.status(403).json({ error: err.message });
-        }
+router.post('/upload', async (req, res) => {
+    // const uploadId = randomUUID()
+    console.log("before res")
+    // res.status(202).json({uploadId})
+    console.log("after res")
+    const bb = busboy({ headers: req.headers })
+    const uploadId = req.query.id
+    const userPath = req.query.path
+    let uploadPath =  path.join(safeDirectory, userPath)
+    const totalFileSize = parseInt(req.headers['content-length'], 10)
+    console.log("Content lenght from header:",totalFileSize)
+    // if (req.header['content-length']) {
+    //     totalFileSize = parseInt(req.headers['content-length'], 10)
+    // }
 
-        // Everything went fine, file is uploaded
-        if (!req.file) {
-            return res.status(400).send('No file was uploaded.');
-        }
-        
-        res.status(201).json({
-            message: 'File uploaded successfully!',
-            filename: req.file.filename,
-            path: req.file.path
+    bb.on('file', (fieldname, file, info) => {
+        const { filename } = info
+        const saveTo = path.join(uploadPath, filename)
+        const writeStream = fsnp.createWriteStream(saveTo)
+        let uploadedBytes = 0;
+
+        console.log("Starting upload", saveTo)
+
+        file.on('data', (chunk) => {
+            uploadedBytes += chunk.length
+            console.log("file size to upload",totalFileSize)
+            if (totalFileSize > 0) {
+                const progress = Math.round((uploadedBytes / totalFileSize) * 100)
+                console.log(("Progress for file is ",progress))
+                sendProgress(uploadId,progress)
+            }
+        })
+
+        file.pipe(writeStream)
+
+        writeStream.on('error', (err) => {
+            console.error('Write stream error:', err);
+            sendProgress(uploadId, 'error');
+            // res.status(500).json({message:"Error on writeStream",Error:err})
         });
+
+        writeStream.on('finish', () => {
+            console.error('Write stream success:', uploadPath);
+            res.status(200).json({ message: "success writing data" })
+            sendProgress(uploadId,100)
+        });
+
     })
+
+    req.pipe(bb)
 })
 
+router.post('/new-folder', async (req, res) => {
+    const { path:userPath, folderName } = req.body
+    if(!userPath ||!folderName){
+        return res.status(400).json({error:'both path and foldre name required'})
+    }
+    const dirPath = path.join(safeDirectory,userPath)
+
+    try{
+        const newfolderPath = path.join(dirPath,folderName)
+        await fs.mkdir(newfolderPath)
+        res.status(201).json({message:'folder created successfully'})
+    }catch(err){
+        console.error("Error createing folder",err)
+        res.status(500).json({error:"Error creating folder"})
+    }
+})
+
+router.post('/delete-folder', async (req, res) => {
+    const { path:userPath } = req.body
+    if(!userPath ){
+        return res.status(400).json({error:'both path and foldre name required'})
+    }
+    const dirPath = path.join(safeDirectory,userPath)
+
+    try{
+        const stats = await fs.stat(dirPath)
+        if(stats.isDirectory())
+        {
+            await fs.rm(dirPath,{recursive:true,force:true})
+            res.status(201).json({message:'folder created successfully'})
+        }else{
+            await fs.unlink(itemPath);
+            console.log(`File deleted: ${itemPath}`);
+            res.status(200).json({ message: 'File deleted successfully.' });
+        }
+    }catch(err){
+        console.error("Error deleting folder",err)
+        res.status(500).json({error:"Error deleting folder"})
+    }
+})
 
 
 module.exports = router;

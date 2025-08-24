@@ -15,7 +15,7 @@ const LiveStats = () => {
         if (!isConnected) setIsConnected(true)
     }, [isConnected])
 
-    useWebSocket('ws://localhost:3000/cpu-stats', handleNewStats)
+    useWebSocket('/personal-live-cloud/cpu-stats', handleNewStats)
     return (
         <div className="bg-slate-100 font-sans p-5 md:p-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
