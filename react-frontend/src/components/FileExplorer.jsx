@@ -4,6 +4,21 @@ import axios from 'axios'
 import NewFolderModal from './NewFolderModal'
 import DeleteFolderModal from './DeleteFolderModal'
 
+
+function generateUUID() {
+  // Check if the modern crypto API is available
+  if (crypto && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  // Fallback for older browsers or non-secure contexts
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 const FileExplorer = () => {
     const [isConnected, setIsConnected] = useState(false)
     const [currentPath, setCurrentPath] = useState('/')
@@ -28,13 +43,13 @@ const FileExplorer = () => {
             }
         ]
     })
-    useWebSocket(`ws://localhost:3000/file-system?path=${currentPath}`, setFileData, setIsConnected)
+    useWebSocket(`/personal-live-cloud/file-system?path=${currentPath}`, setFileData, setIsConnected)
 
     const handleOnClick = (Path, Name, isDirectory) => {
         const newPath = Path === '/' ? `/${Name}` : `${Path}/${Name}`
         if (isDirectory) { setCurrentPath(newPath) }
         else {
-            window.open(`http://localhost:3000/files/download?path=${newPath}`)
+            window.open(`/personal-cloud/files/download?path=${newPath}`)
         }
     }
     const iconPaths = {
@@ -53,7 +68,7 @@ const FileExplorer = () => {
 
     const handleUploadProgress = (uploadId) => {
         console.log("Called handling the upload id", uploadId)
-        const ws = new WebSocket(`ws://localhost:3000/upload-progress?id=${uploadId}`)
+        const ws = new WebSocket(`/personal-live-cloud/upload-progress?id=${uploadId}`)
         ws.onopen = () => {
             console.log("We are connected to get the updates")
             setIsUploading(true)
@@ -84,9 +99,10 @@ const FileExplorer = () => {
         formData.append('file', fileSelected)
         formData.append('path', currentPath)
         console.log("form data path", currentPath)
+        const uploadId = generateUUID()
         try {
-            handleUploadProgress(123)
-            axios.post(`http://localhost:3000/files/upload?path=${currentPath}&id=${123}`, formData, {
+            handleUploadProgress(uploadId)
+            axios.post(`/personal-cloud/files/upload?path=${currentPath}&id=${uploadId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

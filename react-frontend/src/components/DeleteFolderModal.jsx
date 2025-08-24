@@ -4,7 +4,7 @@ import React from 'react'
 const DeleteFolderModal = ({dismissModal,deletePath,deleteDirectory}) => {
   const newPath = deletePath === '/' ? `/${deleteDirectory}` : `${deletePath}/${deleteDirectory}`
   const deleteFolder = ()=>{
-    axios.post('http://localhost:3000/files/delete-folder',{
+    axios.post('/personal-cloud/files/delete-folder',{
       path:newPath
     })
     .then((res)=>{

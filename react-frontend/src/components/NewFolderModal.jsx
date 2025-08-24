@@ -5,7 +5,7 @@ const NewFolderModal = ({dismissModal,currentPath}) => {
     const [folderName,setFolderName] = useState('')
     const createNewFolder = ()=>{
         try{
-            axios.post('http://localhost:3000/files/new-folder',{
+            axios.post('/personal-cloud/files/new-folder',{
                 path:currentPath,
                 folderName:folderName
             })

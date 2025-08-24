@@ -15,8 +15,8 @@ function initializeWebSocket(server) {
                 });
                 break;
             case '/file-system':
-                liveFileSystem.handleUpgrade(request,socket,head,(ws)=>{
-                    liveFileSystem.emit('connection',ws,request)
+                liveFileSystem.handleUpgrade(request, socket, head, (ws) => {
+                    liveFileSystem.emit('connection', ws, request)
                 });
                 break;
             case '/upload-progress':

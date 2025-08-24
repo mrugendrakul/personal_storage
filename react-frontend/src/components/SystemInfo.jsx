@@ -22,7 +22,7 @@ const SystemInfo = () => {
     })
     useEffect(()=>{
         console.log("Use effect")
-        axios.get('http://localhost:3000/usage/cpu')
+        axios.get('/personal-cloud/usage/cpu')
         .then((res)=>{
             console.log("got data",res.data)
             setSystemData(res.data)
