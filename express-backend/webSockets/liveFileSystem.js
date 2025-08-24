@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const safeDirectory = '/run/media/Mrugendra/Extra Storage/safeStorage/'
+const safeDirectory = '/home/Mrugendra/safeDirectory'
 const wss = new WebSocket.Server({ noServer: true })
 
 /**
@@ -33,7 +33,7 @@ wss.on('connection', (ws, request) => {
         try {
             const watcher = fs.watch(dirPath,(eventType,filename)=>{
                 if(filename){
-                   console.log(`Change in ${dirPath}: ${eventType} on ${filename}`);
+                //    console.log(`Change in ${dirPath}: ${eventType} on ${filename}`);
                     const contents = getDirectoryContents(dirPath,userPath);
                     broadcast(
                         dirPath, 

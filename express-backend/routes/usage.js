@@ -16,11 +16,11 @@ router.get('/cpu', async (req, res, next) => {
                 name: cpuInfo.manufacturer+cpuInfo.brand,
             },
             storage:{
-                total:bytesToGB(fs[4].size),
-                type:fs[4].type,
+                total:bytesToGB(fs[0].size),
+                type:fs[0].type,
                 numberOfStorage:fs.length,
-                used:bytesToGB(fs[4].used),
-                percent:fs[4].use
+                used:bytesToGB(fs[0].used),
+                percent:fs[0].use
             },
             gpu:gpu.controllers.map(gpu=>({
                 modal:gpu.model,

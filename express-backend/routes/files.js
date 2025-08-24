@@ -4,7 +4,7 @@ const fsnp = require('fs')
 const fs = require('fs').promises;
 const path = require('path')
 const si = require('systeminformation')
-const safeDirectory = '/run/media/Mrugendra/Extra Storage/safeStorage/'
+const safeDirectory = '/home/Mrugendra/safeDirectory'
 const multer = require('multer')
 const { randomUUID } = require('crypto');
 const busboy = require('busboy');
@@ -101,88 +101,103 @@ router.post('/upload', async (req, res) => {
     const bb = busboy({ headers: req.headers })
     const uploadId = req.query.id
     const userPath = req.query.path
-    let uploadPath =  path.join(safeDirectory, userPath)
+    let uploadPath = path.join(safeDirectory, userPath)
     const totalFileSize = parseInt(req.headers['content-length'], 10)
-    console.log("Content lenght from header:",totalFileSize)
+    console.log("Content lenght from header:", totalFileSize)
     // if (req.header['content-length']) {
     //     totalFileSize = parseInt(req.headers['content-length'], 10)
     // }
+    let fileWrites = []
 
     bb.on('file', (fieldname, file, info) => {
         const { filename } = info
         const saveTo = path.join(uploadPath, filename)
-        const writeStream = fsnp.createWriteStream(saveTo)
         let uploadedBytes = 0;
 
         console.log("Starting upload", saveTo)
 
-        file.on('data', (chunk) => {
-            uploadedBytes += chunk.length
-            console.log("file size to upload",totalFileSize)
-            if (totalFileSize > 0) {
-                const progress = Math.round((uploadedBytes / totalFileSize) * 100)
-                console.log(("Progress for file is ",progress))
-                sendProgress(uploadId,progress)
-            }
+        
+        const writePromise = new Promise((resolve, reject) => {
+            const writeStream = fsnp.createWriteStream(saveTo)
+            file.on('data', (chunk) => {
+                uploadedBytes += chunk.length
+                // console.log("file size to upload", totalFileSize)
+                if (totalFileSize > 0) {
+                    const progress = Math.round((uploadedBytes / totalFileSize) * 100)
+                    sendProgress(uploadId, progress)
+                }
+            })
+            file.pipe(writeStream)
+
+            writeStream.on('error', (err) => {
+                console.error('Write stream error:', err);
+                sendProgress(uploadId, 'error');
+                reject(err)
+                // res.status(500).json({message:"Error on writeStream",Error:err})
+            });
+
+            writeStream.on('finish', () => {
+                console.error('Write stream success:', saveTo);
+                sendProgress(uploadId, 100)
+                resolve()
+            });
+
         })
 
-        file.pipe(writeStream)
-
-        writeStream.on('error', (err) => {
-            console.error('Write stream error:', err);
-            sendProgress(uploadId, 'error');
-            // res.status(500).json({message:"Error on writeStream",Error:err})
-        });
-
-        writeStream.on('finish', () => {
-            console.error('Write stream success:', uploadPath);
-            res.status(200).json({ message: "success writing data" })
-            sendProgress(uploadId,100)
-        });
-
+        fileWrites.push(writePromise)
     })
-
+    bb.on('finish',async()=>{
+        try{
+             await Promise.all(fileWrites);
+            console.log("files uploaded successfully : ",fileWrites.length)
+            // sendProgress(uploadId,100)
+            res.status(200).json({message:"Success uploading"})
+        }
+        catch(err){
+            console.error('An Error uploading:',err)
+            res.status(500).json({message:"Error uploaind",})
+        }
+    })
     req.pipe(bb)
 })
 
 router.post('/new-folder', async (req, res) => {
-    const { path:userPath, folderName } = req.body
-    if(!userPath ||!folderName){
-        return res.status(400).json({error:'both path and foldre name required'})
+    const { path: userPath, folderName } = req.body
+    if (!userPath || !folderName) {
+        return res.status(400).json({ error: 'both path and foldre name required' })
     }
-    const dirPath = path.join(safeDirectory,userPath)
+    const dirPath = path.join(safeDirectory, userPath)
 
-    try{
-        const newfolderPath = path.join(dirPath,folderName)
+    try {
+        const newfolderPath = path.join(dirPath, folderName)
         await fs.mkdir(newfolderPath)
-        res.status(201).json({message:'folder created successfully'})
-    }catch(err){
-        console.error("Error createing folder",err)
-        res.status(500).json({error:"Error creating folder"})
+        res.status(201).json({ message: 'folder created successfully' })
+    } catch (err) {
+        console.error("Error createing folder", err)
+        res.status(500).json({ error: "Error creating folder" })
     }
 })
 
 router.post('/delete-folder', async (req, res) => {
-    const { path:userPath } = req.body
-    if(!userPath ){
-        return res.status(400).json({error:'both path and foldre name required'})
+    const { path: userPath } = req.body
+    if (!userPath) {
+        return res.status(400).json({ error: 'both path and foldre name required' })
     }
-    const dirPath = path.join(safeDirectory,userPath)
+    const dirPath = path.join(safeDirectory, userPath)
 
-    try{
+    try {
         const stats = await fs.stat(dirPath)
-        if(stats.isDirectory())
-        {
-            await fs.rm(dirPath,{recursive:true,force:true})
-            res.status(201).json({message:'folder created successfully'})
-        }else{
+        if (stats.isDirectory()) {
+            await fs.rm(dirPath, { recursive: true, force: true })
+            res.status(201).json({ message: 'folder created successfully' })
+        } else {
             await fs.unlink(dirPath);
             console.log(`File deleted: ${dirPath}`);
             res.status(200).json({ message: 'File deleted successfully.' });
         }
-    }catch(err){
-        console.error("Error deleting folder",err)
-        res.status(500).json({error:"Error deleting folder"})
+    } catch (err) {
+        console.error("Error deleting folder", err)
+        res.status(500).json({ error: "Error deleting folder" })
     }
 })
 

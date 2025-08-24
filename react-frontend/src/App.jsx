@@ -6,9 +6,9 @@ import SystemInfo from './components/SystemInfo'
 
 function App() {
   return(
-    <div className='flex flex-col  w-screen h-screen'>
+    <div className='flex flex-col  w-screen h-screen bg-slate-100'>
       <div className='flex flex-row'>
-      <div className='w-1/4 min-w-sm bg-slate-100'>
+      <div className='w-1/4 min-w-sm '>
       <LiveStats/>
       <SystemInfo/>
       </div>

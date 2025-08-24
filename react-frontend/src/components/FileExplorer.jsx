@@ -6,29 +6,29 @@ import DeleteFolderModal from './DeleteFolderModal'
 
 
 function generateUUID() {
-  // Check if the modern crypto API is available
-  if (crypto && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
+    // Check if the modern crypto API is available
+    if (crypto && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
 
-  // Fallback for older browsers or non-secure contexts
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+    // Fallback for older browsers or non-secure contexts
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
-const FileExplorer = () => {
+const FileExplorer = ({closeButton}) => {
     const [isConnected, setIsConnected] = useState(false)
     const [currentPath, setCurrentPath] = useState('/')
     const [isUploading, setIsUploading] = useState(false)
-    const [fileSelected, setFileSeleted] = useState(null)
+    const [fileSelected, setFileSeleted] = useState([])
     const fileInputRef = useRef(null)
     const [uploadProgress, setUploadProgress] = useState(0)
     const [settingNewfolder, setSettingNewFolder] = useState(false)
-    const [deleteModal,setDeleteModal] = useState(false)
-    const [deleteDirectory,setDeleteDirectory] = useState('')
+    const [deleteModal, setDeleteModal] = useState(false)
+    const [deleteDirectory, setDeleteDirectory] = useState('')
     const [fileData, setFileData] = useState({
         "type": "initial",
         "path": "/",
@@ -55,7 +55,7 @@ const FileExplorer = () => {
     const iconPaths = {
         folder: <svg className='fill-current h-6 w-6' viewBox="0 -960 960 960" ><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h207q16 0 30.5 6t25.5 17l57 57h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z" /></svg>,
         files: <svg className='fill-current h-6 w-6' viewBox="0 -960 960 960"><path d="M160-160q-33 0-56.5-23.5T80-240v-400q0-33 23.5-56.5T160-720h240l80-80h320q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm73-280h207v-207L233-440Zm-73-40 160-160H160v160Zm0 120v120h640v-480H520v280q0 33-23.5 56.5T440-360H160Zm280-160Z" /></svg>,
-        delete:<svg className='fill-current h-6 w-6' viewBox="0 -960 960 960"><path d="M280-120q-33 0-56.5-23.5T200-200v-520q-17 0-28.5-11.5T160-760q0-17 11.5-28.5T200-800h160q0-17 11.5-28.5T400-840h160q17 0 28.5 11.5T600-800h160q17 0 28.5 11.5T800-760q0 17-11.5 28.5T760-720v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM400-280q17 0 28.5-11.5T440-320v-280q0-17-11.5-28.5T400-640q-17 0-28.5 11.5T360-600v280q0 17 11.5 28.5T400-280Zm160 0q17 0 28.5-11.5T600-320v-280q0-17-11.5-28.5T560-640q-17 0-28.5 11.5T520-600v280q0 17 11.5 28.5T560-280ZM280-720v520-520Z"/></svg>
+        delete: <svg className='fill-current h-6 w-6' viewBox="0 -960 960 960"><path d="M280-120q-33 0-56.5-23.5T200-200v-520q-17 0-28.5-11.5T160-760q0-17 11.5-28.5T200-800h160q0-17 11.5-28.5T400-840h160q17 0 28.5 11.5T600-800h160q17 0 28.5 11.5T800-760q0 17-11.5 28.5T760-720v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM400-280q17 0 28.5-11.5T440-320v-280q0-17-11.5-28.5T400-640q-17 0-28.5 11.5T360-600v280q0 17 11.5 28.5T400-280Zm160 0q17 0 28.5-11.5T600-320v-280q0-17-11.5-28.5T560-640q-17 0-28.5 11.5T520-600v280q0 17 11.5 28.5T560-280ZM280-720v520-520Z" /></svg>
     }
     const handleGoUp = () => {
         if (currentPath === '/') return;
@@ -63,7 +63,7 @@ const FileExplorer = () => {
         setCurrentPath(parentPath);
     };
     const handleSelectFile = (e) => {
-        setFileSeleted(e.target.files[0])
+        setFileSeleted(e.target.files)
     }
 
     const handleUploadProgress = (uploadId) => {
@@ -88,7 +88,7 @@ const FileExplorer = () => {
         ws.onclose = () => {
             console.log("File uploaded successfully ig")
             setUploadProgress(0)
-            setFileSeleted(null)
+            setFileSeleted([])
             fileInputRef.current.value = null
         }
     }
@@ -96,7 +96,10 @@ const FileExplorer = () => {
     const handleUpload = async () => {
         setIsUploading(true)
         const formData = new FormData()
-        formData.append('file', fileSelected)
+        for (let i = 0; i < fileSelected.length; i++) {
+            formData.append('files', fileSelected[i]);
+        }
+        // formData.append('file', fileSelected)
         formData.append('path', currentPath)
         console.log("form data path", currentPath)
         const uploadId = generateUUID()
@@ -111,7 +114,7 @@ const FileExplorer = () => {
                 if (res.status === 200) {
                     console.log("File uploaded successfully", res)
                     setIsUploading(false)
-                    setFileSeleted(null)
+                    setFileSeleted([])
                     fileInputRef.current.value = null
                 }
             })
@@ -123,9 +126,9 @@ const FileExplorer = () => {
         }
     }
     return (
-        <div>
-            {settingNewfolder && <NewFolderModal dismissModal={() => { setSettingNewFolder(false) }} currentPath={currentPath}/>}
-            {deleteModal && <DeleteFolderModal dismissModal={()=>{setDeleteModal(false)}} deletePath={currentPath} deleteDirectory={deleteDirectory}/>}
+        <div className='rounded-xl bg-white h-full w-full shadow-xl'>
+            {settingNewfolder && <NewFolderModal dismissModal={() => { setSettingNewFolder(false) }} currentPath={currentPath} />}
+            {deleteModal && <DeleteFolderModal dismissModal={() => { setDeleteModal(false) }} deletePath={currentPath} deleteDirectory={deleteDirectory} />}
             <div className='flex flex-row justify-between align-center'>
                 <div className='flex flex-row gap-2'>
                     <button onClick={handleGoUp}>
@@ -139,16 +142,16 @@ const FileExplorer = () => {
                 <div className='flex flex-row gap-2 items-center justify-center'>
                     <button
                         className='mr-2 rounded-sm p-2 m-2 bg-blue-200 hover:cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400'
-                        
+
                         onClick={() => { setSettingNewFolder(true) }}>
                         Create new folder
                     </button>
-                    {!isUploading && <p className={'bg-blue-300 rounded-md p-0.5'}>
-                        {fileSelected?.name}
+                    {!isUploading  && <p className={'bg-blue-300 rounded-md p-0.5'}>
+                        {fileSelected.length !==0 && `${fileSelected?.length} files selected to upload`}
                     </p>}
                     {isUploading &&
                         <p className={'bg-slate-200 rounded-md p-0.5 relative'}>
-                            {fileSelected?.name}
+                            Uploading Selected files
                             <div className={`bg-green-500/30 absolute top-0 left-0 p-0.5 rounded-md transition-all ease-in-out duration-50 h-full`}
                                 style={{ width: `${uploadProgress}%` }}
                             >
@@ -156,7 +159,7 @@ const FileExplorer = () => {
                         </p>
                     }
 
-                    <input type='file' name='file' onChange={handleSelectFile} className='hidden' id='file-upload' ref={fileInputRef} />
+                    <input type='file' name='file' onChange={handleSelectFile} className='hidden' id='file-upload' ref={fileInputRef} multiple />
                     <label
                         className='mr-2 rounded-sm p-2 m-2 bg-blue-200 hover:cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400'
                         htmlFor='file-upload'
@@ -169,6 +172,11 @@ const FileExplorer = () => {
                         disabled={isUploading || fileSelected === null || fileSelected === undefined}
                         onClick={handleUpload}>
                         Upload
+                    </button>
+                    <button className=' hover:bg-red-400 p-3'
+                    onClick={closeButton}
+                    >
+                        <svg className='fill-current h-6 w-6' viewBox="0 -960 960 960"><path d="M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z"/></svg>
                     </button>
                 </div>
             </div>
@@ -198,7 +206,7 @@ const FileExplorer = () => {
                             <tr className='hover:bg-blue-200 hover:cursor-pointer  border-b-gray-200 border-b-1' key={index}
                             >
                                 <td className='flex flex-row gap-1'
-                                onClick={() => { handleOnClick(file.path, file.name, file.isDirectory) }}
+                                    onClick={() => { handleOnClick(file.path, file.name, file.isDirectory) }}
                                 >
                                     {file.isDirectory && iconPaths.folder}
                                     {!file.isDirectory && iconPaths.files}
@@ -213,10 +221,10 @@ const FileExplorer = () => {
                                 <td className='py-2'>
                                     {file.modified}
                                 </td>
-                                <td className='flex py-2 hover:bg-red-300 items-center' onClick={()=>{
+                                <td className='flex py-2 hover:bg-red-300 items-center' onClick={() => {
                                     setDeleteDirectory(file.name)
                                     setDeleteModal(true)
-                                    }}>
+                                }}>
                                     <span className='w-full'>{iconPaths.delete}</span>
                                 </td>
                             </tr>)}
