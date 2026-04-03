@@ -17,7 +17,7 @@ const LiveStats = () => {
 
     useWebSocket('/personal-live-cloud/cpu-stats', handleNewStats)
     return (
-        <div className="bg-slate-100 font-sans p-5 md:p-10">
+        <div className="font-sans p-5 md:p-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* CPU Usage Card */}
                     <div className="flex flex-col bg-white p-6 rounded-xl shadow-md content-between justify-between">

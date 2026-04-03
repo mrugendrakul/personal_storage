@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react'
 import useWebSocket from '../customHooks/useWebSocket'
 import axios from 'axios'
-import NewFolderModal from './NewFolderModal'
-import DeleteFolderModal from './DeleteFolderModal'
+import NewFolderModal from '../components/NewFolderModal'
+import DeleteFolderModal from '../components/DeleteFolderModal'
 
 
 function generateUUID() {
@@ -172,11 +172,6 @@ const FileExplorer = ({closeButton}) => {
                         disabled={isUploading || fileSelected === null || fileSelected === undefined}
                         onClick={handleUpload}>
                         Upload
-                    </button>
-                    <button className=' hover:bg-red-400 p-3'
-                    onClick={closeButton}
-                    >
-                        <svg className='fill-current h-6 w-6' viewBox="0 -960 960 960"><path d="M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z"/></svg>
                     </button>
                 </div>
             </div>

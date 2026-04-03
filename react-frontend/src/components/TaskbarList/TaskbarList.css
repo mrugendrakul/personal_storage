@@ -1,0 +1,15 @@
+#bar-list{
+    display:flex;
+    flex-direction: row;
+}
+
+#app-icon{
+    margin : 5px;
+    /* border: 2px solid black; */
+    width: 55px;
+    height: 55px;
+}
+
+.app-icon{
+/* background: red; */
+}

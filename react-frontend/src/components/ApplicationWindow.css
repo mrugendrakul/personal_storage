@@ -1,0 +1,40 @@
+#app-window{
+    background: rgb(226, 224, 238);
+    border-radius: 15px;
+    display:flex;
+    position: absolute;
+    flex-direction: column;
+}
+
+#app-content{
+    overflow: scroll;
+    box-sizing: border-box;
+    flex-grow: 1;
+    padding:10px;
+}
+
+#topbar{
+    height: 40px;
+    background-color: azure;
+    flex-shrink: 0;
+    border-radius: 15px 15px 0px 0px;
+    display: flex;
+    flex-direction: row;
+}
+
+#title{
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.window-button{
+    /* background: red; */
+    padding: 5px;
+    margin:2px;
+    border-radius: 13px;
+    border:1px solid black;
+    width: 2.5em;
+    height: 2.5em;
+}

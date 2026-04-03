@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const safeDirectory = '/home/Mrugendra/safeDirectory'
+const safeDirectory = 'SafeFileSystem'
 const wss = new WebSocket.Server({ noServer: true })
 
 /**
